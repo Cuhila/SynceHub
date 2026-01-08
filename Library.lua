@@ -1,5 +1,5 @@
--- macOS Style UI Library by Synce
--- Modern, Clean, Mobile-Friendly
+-- macOS Style UI Library by Synce - Fixed Version
+-- Modern, Clean, Mobile-Friendly, Horizontal Layout
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -10,8 +10,8 @@ local Library = {}
 local Theme = {
     Background = Color3.fromRGB(240, 240, 245),
     Header = Color3.fromRGB(250, 250, 252),
-    TabBar = Color3.fromRGB(245, 245, 248),
-    TabActive = Color3.fromRGB(255, 255, 255),
+    Sidebar = Color3.fromRGB(245, 245, 248),
+    TabActive = Color3.fromRGB(0, 122, 255),
     TabInactive = Color3.fromRGB(235, 235, 240),
     Text = Color3.fromRGB(30, 30, 30),
     TextSecondary = Color3.fromRGB(100, 100, 100),
@@ -51,7 +51,7 @@ end
 -- Create Window
 function Library:CreateWindow(config)
     local WindowName = config.Name or "macOS Window"
-    local WindowSize = config.Size or UDim2.new(0, 350, 0, 500)
+    local WindowSize = config.Size or UDim2.new(0, 420, 0, 280)
     
     -- ScreenGui
     local ScreenGui = Instance.new("ScreenGui")
@@ -73,20 +73,6 @@ function Library:CreateWindow(config)
     CreateCorner(12).Parent = Window
     CreateStroke(Theme.Border, 1).Parent = Window
     
-    -- Shadow Effect
-    local Shadow = Instance.new("ImageLabel")
-    Shadow.Name = "Shadow"
-    Shadow.BackgroundTransparency = 1
-    Shadow.Position = UDim2.new(0, -15, 0, -15)
-    Shadow.Size = UDim2.new(1, 30, 1, 30)
-    Shadow.ZIndex = 0
-    Shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    Shadow.ImageTransparency = 0.8
-    Shadow.ScaleType = Enum.ScaleType.Slice
-    Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
-    Shadow.Parent = Window
-    
     -- Header
     local Header = Instance.new("Frame")
     Header.Name = "Header"
@@ -95,14 +81,32 @@ function Library:CreateWindow(config)
     Header.BorderSizePixel = 0
     Header.Parent = Window
     
-    CreateCorner(12).Parent = Header
+    -- Header Top Corners Only
+    local HeaderMask = Instance.new("Frame")
+    HeaderMask.Size = UDim2.new(1, 0, 1, 2)
+    HeaderMask.Position = UDim2.new(0, 0, 0, 0)
+    HeaderMask.BackgroundColor3 = Theme.Header
+    HeaderMask.BorderSizePixel = 0
+    HeaderMask.Parent = Header
+    
+    CreateCorner(12).Parent = HeaderMask
+    
+    -- Cover bottom corners
+    local HeaderBottom = Instance.new("Frame")
+    HeaderBottom.Size = UDim2.new(1, 0, 0, 12)
+    HeaderBottom.Position = UDim2.new(0, 0, 1, -12)
+    HeaderBottom.BackgroundColor3 = Theme.Header
+    HeaderBottom.BorderSizePixel = 0
+    HeaderBottom.ZIndex = 2
+    HeaderBottom.Parent = Header
     
     -- Header Bottom Border
     local HeaderBorder = Instance.new("Frame")
     HeaderBorder.Size = UDim2.new(1, 0, 0, 1)
-    HeaderBorder.Position = UDim2.new(0, 0, 1, -1)
+    HeaderBorder.Position = UDim2.new(0, 0, 1, 0)
     HeaderBorder.BackgroundColor3 = Theme.Border
     HeaderBorder.BorderSizePixel = 0
+    HeaderBorder.ZIndex = 3
     HeaderBorder.Parent = Header
     
     -- Window Controls Container
@@ -111,6 +115,7 @@ function Library:CreateWindow(config)
     Controls.Size = UDim2.new(0, 70, 1, 0)
     Controls.Position = UDim2.new(0, 12, 0, 0)
     Controls.BackgroundTransparency = 1
+    Controls.ZIndex = 3
     Controls.Parent = Header
     
     -- Close Button (Red)
@@ -122,6 +127,7 @@ function Library:CreateWindow(config)
     CloseBtn.BorderSizePixel = 0
     CloseBtn.Text = ""
     CloseBtn.AutoButtonColor = false
+    CloseBtn.ZIndex = 4
     CloseBtn.Parent = Controls
     
     CreateCorner(12).Parent = CloseBtn
@@ -135,6 +141,7 @@ function Library:CreateWindow(config)
     MinimizeBtn.BorderSizePixel = 0
     MinimizeBtn.Text = ""
     MinimizeBtn.AutoButtonColor = false
+    MinimizeBtn.ZIndex = 4
     MinimizeBtn.Parent = Controls
     
     CreateCorner(12).Parent = MinimizeBtn
@@ -148,6 +155,7 @@ function Library:CreateWindow(config)
     MaximizeBtn.BorderSizePixel = 0
     MaximizeBtn.Text = ""
     MaximizeBtn.AutoButtonColor = false
+    MaximizeBtn.ZIndex = 4
     MaximizeBtn.Parent = Controls
     
     CreateCorner(12).Parent = MaximizeBtn
@@ -163,43 +171,60 @@ function Library:CreateWindow(config)
     Title.TextSize = 13
     Title.Font = Enum.Font.GothamMedium
     Title.TextXAlignment = Enum.TextXAlignment.Center
+    Title.ZIndex = 3
     Title.Parent = Header
     
-    -- Tab Bar
-    local TabBar = Instance.new("Frame")
-    TabBar.Name = "TabBar"
-    TabBar.Size = UDim2.new(1, 0, 0, 45)
-    TabBar.Position = UDim2.new(0, 0, 0, 40)
-    TabBar.BackgroundColor3 = Theme.TabBar
-    TabBar.BorderSizePixel = 0
-    TabBar.Parent = Window
+    -- Main Container (Horizontal Layout)
+    local MainContainer = Instance.new("Frame")
+    MainContainer.Name = "MainContainer"
+    MainContainer.Size = UDim2.new(1, 0, 1, -40)
+    MainContainer.Position = UDim2.new(0, 0, 0, 40)
+    MainContainer.BackgroundTransparency = 1
+    MainContainer.Parent = Window
     
-    -- Tab Container (Scrolling)
-    local TabScroll = Instance.new("ScrollingFrame")
-    TabScroll.Name = "TabScroll"
-    TabScroll.Size = UDim2.new(1, -20, 1, 0)
-    TabScroll.Position = UDim2.new(0, 10, 0, 0)
-    TabScroll.BackgroundTransparency = 1
-    TabScroll.BorderSizePixel = 0
-    TabScroll.ScrollBarThickness = 0
-    TabScroll.ScrollingDirection = Enum.ScrollingDirection.X
-    TabScroll.CanvasSize = UDim2.new(0, 0, 1, 0)
-    TabScroll.Parent = TabBar
+    -- Sidebar (Tabs)
+    local Sidebar = Instance.new("Frame")
+    Sidebar.Name = "Sidebar"
+    Sidebar.Size = UDim2.new(0, 100, 1, 0)
+    Sidebar.Position = UDim2.new(0, 0, 0, 0)
+    Sidebar.BackgroundColor3 = Theme.Sidebar
+    Sidebar.BorderSizePixel = 0
+    Sidebar.Parent = MainContainer
+    
+    -- Sidebar Right Border
+    local SidebarBorder = Instance.new("Frame")
+    SidebarBorder.Size = UDim2.new(0, 1, 1, 0)
+    SidebarBorder.Position = UDim2.new(1, -1, 0, 0)
+    SidebarBorder.BackgroundColor3 = Theme.Border
+    SidebarBorder.BorderSizePixel = 0
+    SidebarBorder.Parent = Sidebar
+    
+    -- Tab Container (Vertical)
+    local TabContainer = Instance.new("ScrollingFrame")
+    TabContainer.Name = "TabContainer"
+    TabContainer.Size = UDim2.new(1, 0, 1, -10)
+    TabContainer.Position = UDim2.new(0, 0, 0, 5)
+    TabContainer.BackgroundTransparency = 1
+    TabContainer.BorderSizePixel = 0
+    TabContainer.ScrollBarThickness = 0
+    TabContainer.ScrollingDirection = Enum.ScrollingDirection.Y
+    TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+    TabContainer.Parent = Sidebar
     
     local TabLayout = Instance.new("UIListLayout")
-    TabLayout.FillDirection = Enum.FillDirection.Horizontal
-    TabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    TabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    TabLayout.Padding = UDim.new(0, 8)
-    TabLayout.Parent = TabScroll
+    TabLayout.FillDirection = Enum.FillDirection.Vertical
+    TabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    TabLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+    TabLayout.Padding = UDim.new(0, 6)
+    TabLayout.Parent = TabContainer
     
-    -- Content Container
-    local Content = Instance.new("Frame")
-    Content.Name = "Content"
-    Content.Size = UDim2.new(1, 0, 1, -85)
-    Content.Position = UDim2.new(0, 0, 0, 85)
-    Content.BackgroundTransparency = 1
-    Content.Parent = Window
+    -- Content Area
+    local ContentArea = Instance.new("Frame")
+    ContentArea.Name = "ContentArea"
+    ContentArea.Size = UDim2.new(1, -100, 1, 0)
+    ContentArea.Position = UDim2.new(0, 100, 0, 0)
+    ContentArea.BackgroundTransparency = 1
+    ContentArea.Parent = MainContainer
     
     -- Window Functions
     local WindowFunctions = {}
@@ -271,8 +296,8 @@ function Library:CreateWindow(config)
             maximized = true
             WindowFunctions.OriginalSize = Window.Size
             Tween(Window, {
-                Size = UDim2.new(0, 500, 0, 650),
-                Position = UDim2.new(0.5, -250, 0.5, -325)
+                Size = UDim2.new(0, 600, 0, 400),
+                Position = UDim2.new(0.5, -300, 0.5, -200)
             }, 0.3)
         else
             maximized = false
@@ -287,7 +312,7 @@ function Library:CreateWindow(config)
     function WindowFunctions:CreateTab(tabName, icon)
         local TabButton = Instance.new("TextButton")
         TabButton.Name = tabName
-        TabButton.Size = UDim2.new(0, 80, 0, 32)
+        TabButton.Size = UDim2.new(0, 90, 0, 36)
         TabButton.BackgroundColor3 = Theme.TabInactive
         TabButton.BorderSizePixel = 0
         TabButton.Text = tabName
@@ -295,7 +320,7 @@ function Library:CreateWindow(config)
         TabButton.TextSize = 12
         TabButton.Font = Enum.Font.GothamMedium
         TabButton.AutoButtonColor = false
-        TabButton.Parent = TabScroll
+        TabButton.Parent = TabContainer
         
         CreateCorner(8).Parent = TabButton
         
@@ -309,7 +334,7 @@ function Library:CreateWindow(config)
         TabContent.ScrollBarThickness = 4
         TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
         TabContent.Visible = false
-        TabContent.Parent = Content
+        TabContent.Parent = ContentArea
         
         local ContentLayout = Instance.new("UIListLayout")
         ContentLayout.Padding = UDim.new(0, 10)
@@ -334,7 +359,7 @@ function Library:CreateWindow(config)
             
             -- Select this tab
             TabButton.BackgroundColor3 = Theme.TabActive
-            TabButton.TextColor3 = Theme.Text
+            TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
             TabContent.Visible = true
             WindowFunctions.CurrentTab = TabFunctions
         end)
@@ -342,7 +367,7 @@ function Library:CreateWindow(config)
         -- Auto-select first tab
         if #WindowFunctions.Tabs == 0 then
             TabButton.BackgroundColor3 = Theme.TabActive
-            TabButton.TextColor3 = Theme.Text
+            TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
             TabContent.Visible = true
             WindowFunctions.CurrentTab = TabFunctions
         end
@@ -354,7 +379,7 @@ function Library:CreateWindow(config)
         })
         
         -- Update canvas size
-        TabScroll.CanvasSize = UDim2.new(0, TabLayout.AbsoluteContentSize.X, 0, 0)
+        TabContainer.CanvasSize = UDim2.new(0, 0, 0, TabLayout.AbsoluteContentSize.Y + 10)
         
         -- Create Section
         function TabFunctions:CreateSection(sectionName)
@@ -504,7 +529,7 @@ function Library:CreateWindow(config)
             local TextBox = Instance.new("TextBox")
             TextBox.Size = UDim2.new(1, -20, 0, 30)
             TextBox.Position = UDim2.new(0, 10, 0, 30)
-            TextBox.BackgroundColor3 = Theme.TabBar
+            TextBox.BackgroundColor3 = Theme.Sidebar
             TextBox.BorderSizePixel = 0
             TextBox.PlaceholderText = Placeholder
             TextBox.Text = ""
@@ -527,42 +552,52 @@ function Library:CreateWindow(config)
         return TabFunctions
     end
     
-    -- Notification System
+    -- Notification System (Compact & Transparent)
     function WindowFunctions:Notify(config)
         local NotifTitle = config.Title or "Notification"
         local NotifText = config.Text or ""
         local Duration = config.Duration or 3
         
         local Notif = Instance.new("Frame")
-        Notif.Size = UDim2.new(0, 0, 0, 70)
-        Notif.Position = UDim2.new(1, -20, 1, -90)
+        Notif.Size = UDim2.new(0, 0, 0, 50)
+        Notif.Position = UDim2.new(1, -10, 1, -60)
         Notif.AnchorPoint = Vector2.new(1, 0)
-        Notif.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Notif.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        Notif.BackgroundTransparency = 0.3
         Notif.BorderSizePixel = 0
         Notif.ClipsDescendants = true
         Notif.Parent = ScreenGui
         
         CreateCorner(10).Parent = Notif
-        CreateStroke(Theme.Border, 1).Parent = Notif
+        
+        -- Blur Effect
+        local Blur = Instance.new("Frame")
+        Blur.Size = UDim2.new(1, 0, 1, 0)
+        Blur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Blur.BackgroundTransparency = 0.95
+        Blur.BorderSizePixel = 0
+        Blur.Parent = Notif
+        
+        CreateCorner(10).Parent = Blur
         
         local NotifTitleLabel = Instance.new("TextLabel")
-        NotifTitleLabel.Size = UDim2.new(1, -20, 0, 20)
-        NotifTitleLabel.Position = UDim2.new(0, 10, 0, 10)
+        NotifTitleLabel.Size = UDim2.new(1, -20, 0, 16)
+        NotifTitleLabel.Position = UDim2.new(0, 10, 0, 8)
         NotifTitleLabel.BackgroundTransparency = 1
         NotifTitleLabel.Text = NotifTitle
-        NotifTitleLabel.TextColor3 = Theme.Text
-        NotifTitleLabel.TextSize = 13
+        NotifTitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        NotifTitleLabel.TextSize = 12
         NotifTitleLabel.Font = Enum.Font.GothamBold
         NotifTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
         NotifTitleLabel.Parent = Notif
         
         local NotifTextLabel = Instance.new("TextLabel")
-        NotifTextLabel.Size = UDim2.new(1, -20, 0, 30)
-        NotifTextLabel.Position = UDim2.new(0, 10, 0, 32)
+        NotifTextLabel.Size = UDim2.new(1, -20, 0, 20)
+        NotifTextLabel.Position = UDim2.new(0, 10, 0, 26)
         NotifTextLabel.BackgroundTransparency = 1
         NotifTextLabel.Text = NotifText
-        NotifTextLabel.TextColor3 = Theme.TextSecondary
-        NotifTextLabel.TextSize = 11
+        NotifTextLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        NotifTextLabel.TextSize = 10
         NotifTextLabel.Font = Enum.Font.Gotham
         NotifTextLabel.TextXAlignment = Enum.TextXAlignment.Left
         NotifTextLabel.TextYAlignment = Enum.TextYAlignment.Top
@@ -570,11 +605,14 @@ function Library:CreateWindow(config)
         NotifTextLabel.Parent = Notif
         
         -- Animate in
-        Tween(Notif, {Size = UDim2.new(0, 280, 0, 70)}, 0.4)
+        Tween(Notif, {Size = UDim2.new(0, 220, 0, 50)}, 0.4)
         
         -- Auto dismiss
         task.delay(Duration, function()
-            Tween(Notif, {Size = UDim2.new(0, 0, 0, 70)}, 0.3)
+            Tween(Notif, {
+                Size = UDim2.new(0, 0, 0, 50),
+                BackgroundTransparency = 1
+            }, 0.3)
             task.wait(0.3)
             Notif:Destroy()
         end)
@@ -584,4 +622,3 @@ function Library:CreateWindow(config)
 end
 
 return Library
-  
